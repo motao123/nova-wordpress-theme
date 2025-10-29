@@ -31,12 +31,12 @@ if (post_password_required()) {
 
     // 添加表单字段（昵称、邮箱、网址）
     $fields['author'] = '<div class="comment-form-author"><input id="author" placeholder="' . esc_attr__('昵称', 'nova') . ($req ? '*' : '') . '" name="author" type="text" value="' . esc_attr($commenter['comment_author']) .
-        '" size="30"' . $aria_req . ' /></div>';
+        '" size="30"' . $aria_req . ($req ? ' required' : '') . ' autocomplete="name" maxlength="60" /></div>';
 
     $fields['email'] = '<div class="comment-form-email"><input id="email" placeholder="' . esc_attr__('Email', 'nova') . ($req ? '*' : '') . '" name="email" type="email" value="' . esc_attr($commenter['comment_author_email']) .
-        '" size="30"' . $aria_req . ' /></div>';
+        '" size="30"' . $aria_req . ($req ? ' required' : '') . ' autocomplete="email" maxlength="100" /></div>';
 
-    $fields['url'] = '<div class="comment-form-url"><input id="url" placeholder="' . esc_attr__('网址（可选）', 'nova') . '" name="url" type="url" value="" size="30" /></div>';
+    $fields['url'] = '<div class="comment-form-url"><input id="url" placeholder="' . esc_attr__('网址（可选）', 'nova') . '" name="url" type="url" value="' . esc_attr($commenter['comment_author_url'] ?? '') . '" size="30" autocomplete="url" inputmode="url" /></div>';
 
     $user_avatar = get_avatar("", 45);
 
@@ -57,13 +57,26 @@ if (post_password_required()) {
         'label_submit'      => esc_html__('发表评论', 'nova'),
         'format'            => 'xhtml',
 
-        'comment_field'     => '<div class="comment_textarea_wrapper">' . $user_avatar . '<textarea placeholder="' . esc_attr__('嗨，如果想说点什么？请写下你的评论...', 'nova') . '" id="comment" name="comment" cols="45" rows="8" aria-required="true">' .
+        'comment_field'     => '<div class="comment_textarea_wrapper">' . $user_avatar . '<textarea placeholder="' . esc_attr__('嗨，如果想说点什么？请写下你的评论...', 'nova') . '" id="comment" name="comment" cols="45" rows="8" aria-required="true" required maxlength="2000" autocomplete="off">' .
             '</textarea></div>',
 
         'comment_notes_before' => '<div class="comment-notes">' . esc_html__('电子邮件地址不会被公开，必填项已用*标注', 'nova') . '</div>',
 
-        'fields' => apply_filters('comment_form_default_fields', $fields),
+        // 将基础字段包裹以适配样式布局
+        'fields' => apply_filters('comment_form_default_fields', array(
+            'author'  => '',
+            'email'   => '',
+            'url'     => '',
+            'cookies' => isset($fields['cookies']) ? $fields['cookies'] : '',
+        )),
     );
+
+    // 使用comment_form_before_fields和comment_form_after_fields钩子插入自定义布局容器
+    add_action('comment_form_before_fields', function() use ($fields) {
+        echo '<div class="comment_details_wrapper">';
+        echo $fields['author'] . $fields['email'] . $fields['url'];
+        echo '</div>';
+    });
 
     comment_form($args);
     ?>
