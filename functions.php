@@ -835,24 +835,6 @@ function nova_search_filter($query) {
 }
 add_action('pre_get_posts', 'nova_search_filter');
 
-/**
- * 优化图片加载（改进版 - 更简单高效）
- */
-function nova_lazy_load_images($content) {
-    if (is_admin() || is_feed()) {
-        return $content;
-    }
-    
-    // 简单的字符串替换，更高效
-    // 只在没有loading属性时添加
-    $content = str_replace('<img', '<img loading="lazy"', $content);
-    
-    // 避免重复添加
-    $content = str_replace('loading="lazy" loading="lazy"', 'loading="lazy"', $content);
-    
-    return $content;
-}
-add_filter('the_content', 'nova_lazy_load_images');
 
 /**
  * 添加作者信息框

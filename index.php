@@ -116,7 +116,6 @@ $home_style = get_theme_mod('nova_home_card_style', 'default');
                                         <a href="<?php the_permalink(); ?>" class="thumb-link">
                                             <?php the_post_thumbnail('medium', array(
                                                 'alt' => get_the_title(),
-                                                'loading' => 'lazy',
                                                 'itemprop' => 'image'
                                             )); ?>
                                         </a>

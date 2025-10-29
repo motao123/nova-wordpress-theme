@@ -205,47 +205,6 @@
         }
     }
 
-    /**
-     * 图片懒加载
-     */
-    function initLazyLoad() {
-        // 优先使用原生懒加载
-        if ('loading' in HTMLImageElement.prototype) {
-            const images = document.querySelectorAll('img[loading="lazy"]');
-            images.forEach(img => {
-                img.src = img.dataset.src;
-            });
-        } 
-        // 回退到Intersection Observer
-        else if ('IntersectionObserver' in window) {
-            const imageObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        if (img.dataset.src) {
-                            img.src = img.dataset.src;
-                            img.removeAttribute('data-src');
-                            img.classList.add('loaded');
-                            observer.unobserve(img);
-                        }
-                    }
-                });
-            });
-
-            document.querySelectorAll('img[data-src]').forEach(img => {
-                imageObserver.observe(img);
-            });
-        }
-        // 最后的回退方案
-        else {
-            const images = document.querySelectorAll('img[data-src]');
-            images.forEach(img => {
-                img.src = img.dataset.src;
-                img.removeAttribute('data-src');
-                img.classList.add('loaded');
-            });
-        }
-    }
 
     /**
      * 搜索功能增强
@@ -846,7 +805,7 @@
             function getImageUrl(imgElement) {
                 let url = '';
                 
-                // 优先使用data-src（懒加载图片）
+                // 优先使用data-src（如果有的话）
                 if (imgElement.dataset.src) {
                     url = imgElement.dataset.src;
                 }
@@ -1150,7 +1109,6 @@
         initDesktopMenu();
         initSearchToggle();
         initBackToTop();
-        initLazyLoad();
         initSearch();
         initSmoothScroll();
         initReadingProgress();
@@ -1175,7 +1133,7 @@
     // 页面可见性变化时重新检查某些功能
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
-            initLazyLoad();
+            // 页面重新可见时重新初始化某些功能
         }
     });
 
