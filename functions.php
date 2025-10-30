@@ -7,10 +7,10 @@
  * @Link:   imotao.com
  * @Date:   2025-10-27
  * @Last Modified by:   MoTao
- * @Last Modified time: 2025-10-29
+ * @Last Modified time: 2025-12-31
  * 
  * @package Nova
- * @version 1.5.2
+ * @version 1.5.3
  */
 
 // 防止直接访问
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // 定义主题版本
-define('NOVA_VERSION', '1.5.2');
+define('NOVA_VERSION', '1.5.3');
 define('NOVA_DIR', get_template_directory());
 define('NOVA_URI', get_template_directory_uri());
 

@@ -4,7 +4,7 @@ Theme URI: https://imotao.com
 Author: 陌涛
 Author URI: https://imotao.com
 Description: Nova - 专为内容创作者打造的WordPress主题。响应式设计，暗色模式，自定义配色，丰富功能，让写作更专注，让阅读更愉悦。
-Version: 1.5.2
+Version: 1.5.3
 License: GNU General Public License v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: nova
@@ -15,7 +15,7 @@ Tags: responsive-layout, accessibility-ready, custom-colors, grid-layout, blog, 
 @Link:   imotao.com
 @Date:   2025-10-27
 @Last Modified by:   MoTao
-@Last Modified time: 2025-10-29
+@Last Modified time: 2025-12-31
 */
 
 /* ==========================================================================
@@ -494,6 +494,13 @@ ul, ol {
     gap: 20px;
 }
 
+@media (max-width: 767px) {
+    .image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+    }
+}
+
 /* ==========================================================================
    头部样式 
    ========================================================================== */
@@ -843,6 +850,47 @@ ul, ol {
         padding: 0 15px;
     }
     
+    /* 顶部操作区与汉堡菜单对齐 */
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 36px;
+        height: 36px;
+        padding: 0 8px;
+        gap: 6px;
+        line-height: 1;
+    }
+    
+    /* 显示菜单文字并与图标横向对齐 */
+    .menu-toggle .screen-reader-text {
+        position: static !important;
+        clip: auto !important;
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+        font-size: 0.875rem;
+        margin: 0;
+        padding: 0;
+        line-height: 1.5;
+        color: var(--nova-text-color);
+        display: inline-block;
+        vertical-align: middle;
+    }
+    
+    .menu-toggle svg {
+        display: inline-block;
+        vertical-align: middle;
+        flex-shrink: 0;
+    }
+    
     .header-logo img {
         height: 30px;
     }
@@ -869,12 +917,19 @@ ul, ol {
     }
     
     .header-menu .gore {
+        display: flex;
         flex-direction: column;
         gap: 0;
+        list-style: none;
+        padding: 0;
+        margin: 0;
     }
     
     .header-menu .gore li {
         border-bottom: 1px solid var(--nova-border-color);
+        border-right: none;
+        margin: 0;
+        width: 100%;
     }
     
     .header-menu .gore li:last-child {
@@ -885,6 +940,7 @@ ul, ol {
         display: block;
         padding: 1rem 0;
         white-space: normal;
+        font-size: 0.875rem;
     }
     
     .header-menu .gore .sub-menu {
@@ -892,9 +948,34 @@ ul, ol {
         display: none;
         box-shadow: none;
         background: var(--nova-bg-secondary);
-        margin-left: 1rem;
+        margin-left: 0;
         margin-top: 0;
-        padding: 0.5rem 0;
+        padding: 0.5rem 0.75rem;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-top: 1px solid var(--nova-border-color);
+        border-bottom: 1px solid var(--nova-border-color);
+    }
+    
+    .header-menu .gore .sub-menu li {
+        border-right: 1px solid var(--nova-border-color);
+        border-bottom: none;
+        width: auto;
+        flex: 0 0 auto;
+    }
+    
+    .header-menu .gore .sub-menu li:last-child {
+        border-right: none;
+    }
+    
+    .header-menu .gore .sub-menu a {
+        padding: 0.5rem 0.75rem;
+        white-space: nowrap;
+        font-size: 0.8125rem;
     }
     
     .header-menu .gore li.submenu-open .sub-menu {
@@ -915,6 +996,11 @@ ul, ol {
     }
     
     .iconButton svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .menu-toggle svg {
         width: 18px;
         height: 18px;
     }
@@ -954,6 +1040,8 @@ ul, ol {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     transition: var(--nova-transition);
+    display: flex;
+    flex-direction: column;
 }
 
 .post-card:hover {
@@ -963,7 +1051,18 @@ ul, ol {
 
 .post-card-inner {
     padding: 1.5rem;
-    gap: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+}
+
+@media (max-width: 767px) {
+    .post-card:hover {
+        transform: none;
+    }
+    
+    .post-card-inner {
+        flex-direction: column;
+    }
 }
 
 .article-content {
@@ -1072,6 +1171,13 @@ ul, ol {
     grid-gap: 22px;
     padding-top: 50px;
     padding-bottom: 50px;
+}
+
+@media (max-width: 767px) {
+    .nova-card-list {
+        padding-top: 25px;
+        padding-bottom: 25px;
+    }
 }
 
 .nova-card-item {
@@ -1246,6 +1352,19 @@ ul, ol {
     width: 100%;
 }
 
+/* 移动端缩略图优化 */
+@media (max-width: 767px) {
+    .entry-thumb {
+        width: 100%;
+        padding-left: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .post-card:hover .entry-thumb img {
+        transform: none;
+    }
+}
+
 .entry-header {
     margin-bottom: 2rem;
 }
@@ -1315,6 +1434,20 @@ ul, ol {
     line-clamp: none !important;
     -webkit-box-orient: unset !important;
     overflow: visible !important;
+}
+
+/* 确保移动端文章内容正常显示 */
+@media (max-width: 767px) {
+    .entry-content > * {
+        max-width: 100%;
+    }
+    
+    .entry-content iframe,
+    .entry-content video,
+    .entry-content audio {
+        max-width: 100%;
+        height: auto;
+    }
 }
 
 .entry-content p {
@@ -1611,6 +1744,27 @@ ul, ol {
 textarea.form-control {
     min-height: 120px;
     resize: vertical;
+}
+
+/* 移动端表单优化 */
+@media (max-width: 767px) {
+    .form-group {
+        margin-bottom: 0.875rem;
+    }
+    
+    .form-label {
+        font-size: 0.875rem;
+        margin-bottom: 0.375rem;
+    }
+    
+    .form-control {
+        padding: 0.625rem 0.875rem;
+        font-size: 16px; /* 防止iOS缩放 */
+    }
+    
+    textarea.form-control {
+        min-height: 100px;
+    }
 }
 
 /* ==========================================================================
@@ -2245,6 +2399,21 @@ form.comment-form.nova-style .form-submit input:active {
         margin-right: 0;
         margin-bottom: 10px;
     }
+    
+    /* 移动端修复评论作者浮动与错位问题 */
+    .comment-list .comment-author {
+        float: none;
+        margin-right: 0;
+        height: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .comment-list .comment-meta,
+    .comment-list .comment-metadata {
+        line-height: 1.6;
+    }
 }
 
 /* 暗色模式评论样式 */
@@ -2340,6 +2509,7 @@ code {
     border-radius: 3px;
     font-size: 0.9em;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    word-break: break-word;
 }
 
 pre code {
@@ -2348,6 +2518,23 @@ pre code {
     padding: 0;
     border-radius: 0;
     font-size: inherit;
+    word-break: normal;
+}
+
+/* 移动端代码块优化 */
+@media (max-width: 767px) {
+    pre {
+        padding: 0.875rem;
+        font-size: 0.75rem;
+        margin: 1rem 0;
+        border-radius: 6px;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    code {
+        font-size: 0.8125rem;
+        padding: 0.15em 0.35em;
+    }
 }
 
 /* 代码高亮配色 - Monokai主题 */
@@ -2728,6 +2915,17 @@ pre code {
 .post-card.format-quote .quote-meta {
     font-size: 0.875rem;
     color: var(--nova-text-color);
+}
+
+/* 移动端引用优化 */
+@media (max-width: 767px) {
+    .post-card.format-quote {
+        padding: 1.25rem;
+    }
+    
+    .post-card.format-quote blockquote {
+        font-size: 1rem;
+    }
 }
 
 /* 链接格式 */
@@ -4135,5 +4333,572 @@ h4.toc-active {
 @media (max-width: 768px) {
     .related-posts-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   移动端全面优化样式
+   ========================================================================== */
+
+@media (max-width: 767px) {
+    /* 全局重置 */
+    html {
+        font-size: 14px;
+    }
+    
+    body {
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+    
+    /* 容器间距优化 */
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .site-content {
+        padding: 1rem 0;
+    }
+    
+    /* 标题大小优化 */
+    h1 { 
+        font-size: 1.75rem; 
+        line-height: 1.3;
+    }
+    h2 { 
+        font-size: 1.5rem; 
+        line-height: 1.3;
+    }
+    h3 { 
+        font-size: 1.25rem; 
+        line-height: 1.3;
+    }
+    h4 { 
+        font-size: 1.125rem; 
+        line-height: 1.3;
+    }
+    h5, h6 { 
+        font-size: 1rem; 
+        line-height: 1.3;
+    }
+    
+    /* 文章标题优化 */
+    .entry-title {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .entry-title a {
+        line-height: 1.4;
+    }
+    
+    /* 文章内容优化 */
+    .entry-content {
+        font-size: 0.9375rem;
+        line-height: 1.8;
+    }
+    
+    .entry-content p {
+        margin-bottom: 0.875rem;
+    }
+    
+    .entry-content img {
+        margin: 1rem 0;
+    }
+    
+    /* 文章卡片全面优化 */
+    .post-card {
+        margin-bottom: 1.25rem;
+        border-radius: 8px;
+    }
+    
+    .post-card-inner {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    /* 缩略图优化 */
+    .entry-thumb {
+        width: 100%;
+        padding-left: 0;
+        order: -1;
+        margin-bottom: 1rem;
+    }
+    
+    .entry-thumb img {
+        height: 200px;
+        border-radius: 6px;
+    }
+    
+    /* 文章信息优化 */
+    .entry-info,
+    .entry-meta {
+        font-size: 0.8125rem;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .entry-info svg,
+    .entry-meta svg {
+        width: 12px !important;
+        height: 12px !important;
+    }
+    
+    /* 文章元信息 */
+    .entry-category,
+    .entry-date,
+    .entry-author,
+    .entry-views,
+    .entry-comments {
+        font-size: 0.8125rem;
+    }
+    
+    /* 页脚完全优化 */
+    .site-footer {
+        padding: 1.25rem 0 0.75rem;
+        margin-top: 1.5rem;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .site-info {
+        font-size: 0.75rem;
+        padding-top: 0.75rem;
+    }
+    
+    /* 分页优化 */
+    .pagination {
+        margin: 2rem 0;
+    }
+    
+    .pagination ul {
+        gap: 0.25rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pagination a,
+    .pagination span,
+    .pagination .page-numbers a,
+    .pagination .page-numbers span {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+        min-width: auto;
+    }
+    
+    /* 按钮优化 */
+    .btn {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+    }
+    
+    /* 表单全面优化 */
+    .form-control,
+    .search-field,
+    .comment_details_wrapper input,
+    .comment_textarea_wrapper textarea {
+        font-size: 16px; /* 防止iOS自动缩放 */
+        padding: 0.625rem 0.875rem;
+    }
+    
+    /* 搜索框优化 */
+    .site-search {
+        padding: 0.75rem 15px;
+    }
+    
+    .site-form .field {
+        padding: 0.625rem 0.875rem;
+        font-size: 16px;
+    }
+    
+    /* 评论完全优化 */
+    .comments-area {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+    }
+    
+    .comments-title,
+    .comment-reply-title {
+        font-size: 1.25rem;
+        padding-bottom: 0.75rem;
+    }
+    
+    /* 评论表单完整优化 */
+    form.comment-form.nova-style {
+        padding: 1.25rem;
+    }
+    
+    form.comment-form.nova-style .comment_details_wrapper {
+        flex-direction: column;
+        gap: 0.875rem;
+    }
+    
+    .comment_textarea_wrapper {
+        margin-bottom: 1rem;
+    }
+    
+    .comment_textarea_wrapper textarea {
+        padding-left: 16px !important;
+        padding-right: 16px;
+        height: 100px;
+    }
+    
+    .comment-form-cookies-consent {
+        margin-bottom: 0.875rem;
+        padding: 0.625rem 0.875rem;
+    }
+    
+    /* 评论列表优化 */
+    .comment-list {
+        margin: 20px 0;
+        padding-top: 20px;
+    }
+    
+    .comment-list .comment {
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+    }
+    
+    .comment-list .comment-author img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .comment-content {
+        margin-left: 0;
+        padding: 0.875rem 1rem 0.5rem;
+    }
+    
+    .comment-list .reply {
+        margin-left: 0;
+        margin-top: 0.5rem;
+    }
+    
+    .comment-list .reply a {
+        font-size: 0.8125rem;
+        margin-left: 0;
+    }
+    
+    .comment-list .children {
+        padding-left: 20px;
+        margin-left: 15px;
+    }
+    
+    /* 作者信息框优化 */
+    .author-box {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.25rem;
+        gap: 1rem;
+    }
+    
+    .author-avatar {
+        margin: 0 auto;
+    }
+    
+    .author-avatar img {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .author-name {
+        font-size: 1.125rem;
+    }
+    
+    /* 导航链接优化 */
+    .nav-links {
+        grid-template-columns: 1fr;
+        gap: 0.875rem;
+    }
+    
+    .nav-previous,
+    .nav-next {
+        padding: 0.875rem;
+    }
+    
+    .nav-title {
+        font-size: 0.9375rem;
+    }
+    
+    .nav-subtitle {
+        font-size: 0.8125rem;
+    }
+    
+    .nav-next {
+        text-align: left;
+    }
+    
+    /* 404页面优化 */
+    .error-404 {
+        padding: 2rem 1rem;
+    }
+    
+    .error-404 .page-title {
+        font-size: 3rem;
+    }
+    
+    /* 代码块优化 */
+    pre {
+        font-size: 0.75rem;
+        padding: 0.875rem;
+        margin: 1rem 0;
+    }
+    
+    code {
+        font-size: 0.8125rem;
+        padding: 0.15em 0.35em;
+    }
+    
+    .code-block-title {
+        font-size: 0.625rem;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    /* 标签列表优化 */
+    .tag-list {
+        gap: 0.375rem;
+        margin-bottom: 0.875rem;
+    }
+    
+    .tag-list a {
+        padding: 0.25rem 0.625rem;
+        font-size: 0.8125rem;
+    }
+    
+    /* 面包屑优化 */
+    .breadcrumbs {
+        font-size: 0.8125rem;
+        padding: 0.625rem 0;
+        margin-bottom: 1rem;
+    }
+    
+    /* 相关文章优化 */
+    .related-posts {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+    }
+    
+    .related-posts-title {
+        font-size: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .related-post-thumb img {
+        height: 120px;
+    }
+    
+    .related-post-content {
+        padding: 0.875rem;
+    }
+    
+    .related-post-title {
+        font-size: 0.9375rem;
+    }
+    
+    .related-post-excerpt {
+        font-size: 0.8125rem;
+    }
+    
+    /* 归档列表优化 */
+    .archive-list {
+        gap: 0.875rem;
+    }
+    
+    .archive-link {
+        padding: 1rem 1.25rem;
+    }
+    
+    .archive-month {
+        font-size: 1rem;
+    }
+    
+    /* 作者统计优化 */
+    .author-stats {
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .stat-item strong {
+        font-size: 1.25rem;
+    }
+    
+    .stat-item span {
+        font-size: 0.8125rem;
+    }
+    
+    /* 阅读进度条 */
+    .reading-progress {
+        height: 2px;
+    }
+    
+    /* 页面头部优化 */
+    .page-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+    }
+    
+    .page-title {
+        font-size: 1.75rem;
+    }
+    
+    /* TOC优化 */
+    .article-toc {
+        padding: 1rem;
+    }
+    
+    .article-toc summary {
+        font-size: 1rem;
+        margin-bottom: 0.875rem;
+    }
+    
+    .toc-link {
+        padding: 0.5rem 0.625rem;
+        font-size: 0.875rem;
+    }
+    
+    /* 图片查看器优化 */
+    .image-viewer-content {
+        max-width: 95%;
+    }
+    
+    .image-viewer-close {
+        width: 36px;
+        height: 36px;
+        top: -35px;
+    }
+    
+    .image-viewer-img {
+        max-height: 80vh;
+    }
+    
+    /* 点赞按钮优化 */
+    .entry-like-wrapper {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        gap: 0.75rem;
+    }
+    
+    .entry-like-button,
+    .entry-share-button {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .entry-like-button svg,
+    .entry-share-button svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+    
+    /* 置顶标识优化 */
+    .sticky-badge {
+        padding: 3px 10px;
+        font-size: 11px;
+        margin-right: 8px;
+    }
+    
+    /* QR码模态框优化 */
+    .qr-modal-content {
+        padding: 1.5rem;
+        max-width: 90%;
+    }
+    
+    .qr-modal-content h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    .qr-modal-close {
+        width: 32px;
+        height: 32px;
+        top: 0.75rem;
+        right: 0.75rem;
+    }
+    
+    .qr-tip {
+        font-size: 0.8125rem;
+    }
+    
+    /* 友链区域优化 */
+    .footer-link-list {
+        gap: 0.5rem;
+    }
+    
+    .footer-link-list a {
+        padding: 0.375rem 0.875rem;
+        font-size: 0.8125rem;
+    }
+    
+    /* 列表优化 */
+    ul, ol {
+        padding-left: 1.5rem;
+        margin-bottom: 0.875rem;
+    }
+    
+    /* 引用块优化 */
+    blockquote {
+        margin: 1rem 0;
+        padding: 0.875rem 1rem;
+        font-size: 0.9375rem;
+    }
+    
+    /* 表格优化 */
+    table {
+        font-size: 0.875rem;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 确保所有内容在移动端不可横向滚动 */
+    body {
+        overflow-x: hidden;
+    }
+    
+    /* 修复移动端输入框聚焦时的缩放问题 */
+    @supports (-webkit-touch-callout: none) {
+        input,
+        textarea,
+        select {
+            font-size: 16px !important;
+        }
+    }
+}
+
+/* 超小屏幕优化 (宽度小于 480px) */
+@media (max-width: 480px) {
+    html {
+        font-size: 13px;
+    }
+    
+    .container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    
+    .entry-title {
+        font-size: 1.375rem;
+    }
+    
+    .post-card-inner {
+        padding: 0.875rem;
+    }
+    
+    .entry-thumb img {
+        height: 180px;
+    }
+    
+    h1 { font-size: 1.625rem; }
+    h2 { font-size: 1.375rem; }
+    h3 { font-size: 1.125rem; }
+    
+    .pagination a,
+    .pagination span {
+        padding: 0.4375rem 0.625rem;
     }
 }

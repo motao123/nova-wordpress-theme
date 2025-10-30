@@ -231,10 +231,22 @@
     
     .nova-presets {
         justify-content: center;
+        gap: 8px;
+    }
+    
+    .nova-preset {
+        padding: 8px 16px;
+        font-size: 0.875rem;
     }
     
     .nova-actions {
         flex-direction: column;
+    }
+    
+    .nova-export,
+    .nova-import-btn {
+        width: 100%;
+        padding: 12px 20px;
     }
     
     .back-to-top {
@@ -242,6 +254,25 @@
         right: 20px;
         width: 45px;
         height: 45px;
+        font-size: 1.25rem;
+    }
+    
+    .nova-color-preview {
+        height: 150px;
+        font-size: 1.25rem;
+    }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+    .nova-color-preview {
+        height: 120px;
+        font-size: 1rem;
+    }
+    
+    .nova-preset {
+        padding: 6px 12px;
+        font-size: 0.8125rem;
     }
 }
 
