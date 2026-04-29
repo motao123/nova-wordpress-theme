@@ -17,7 +17,7 @@ get_header();
                         <header class="entry-header">
                             <?php if (has_post_thumbnail()) : ?>
                                 <div class="post-thumbnail">
-                                    <?php the_post_thumbnail('large', array('alt' => get_the_title())); ?>
+                                    <?php the_post_thumbnail('large', array('alt' => esc_attr(get_the_title()))); ?>
                                 </div>
                             <?php endif; ?>
                             
@@ -59,12 +59,21 @@ get_header();
                                     </span>
                                     <?php echo esc_html(nova_get_reading_time()); ?> 分钟阅读
                                 </span>
+                                <span class="word-count">
+                                    <span class="icon" aria-hidden="true">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                            <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"></path>
+                                        </svg>
+                                    </span>
+                                    <?php echo esc_html(number_format_i18n(nova_get_post_word_count())); ?> <?php esc_html_e('字', 'nova'); ?>
+                                </span>
                                 <span class="views-count">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                         <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
-                                    <?php echo nova_get_post_views(); ?> <?php esc_html_e('阅读', 'nova'); ?>
+                                    <?php echo esc_html(nova_get_post_views()); ?> <?php esc_html_e('阅读', 'nova'); ?>
                                 </span>
                                 <span class="comments-count">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -77,6 +86,8 @@ get_header();
 
                         <div class="entry-content">
                             <?php
+                            nova_stale_post_notice();
+
                             the_content();
                             
                             wp_link_pages(array(
@@ -107,16 +118,18 @@ get_header();
                             }
                             ?>
                             
-                            <!-- 点赞按钮 -->
-                            <div class="entry-like-wrapper">
-                                <button class="entry-like-button" data-post-id="<?php the_ID(); ?>" aria-label="<?php esc_attr_e('点赞', 'nova'); ?>">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                    </svg>
-                                    <span class="like-text"><?php esc_html_e('点赞', 'nova'); ?></span>
-                                    <span class="like-count"><?php echo esc_html(nova_get_post_likes()); ?></span>
-                                </button>
-                            </div>
+                            <?php if (get_theme_mod('nova_enable_post_like', true)) : ?>
+                                <!-- 点赞按钮 -->
+                                <div class="entry-like-wrapper">
+                                    <button class="entry-like-button" data-post-id="<?php echo esc_attr(get_the_ID()); ?>" aria-label="<?php esc_attr_e('点赞', 'nova'); ?>">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                        </svg>
+                                        <span class="like-text"><?php esc_html_e('点赞', 'nova'); ?></span>
+                                        <span class="like-count"><?php echo esc_html(nova_get_post_likes()); ?></span>
+                                    </button>
+                                </div>
+                            <?php endif; ?>
                         </footer>
                         
                         <?php nova_author_box(); ?>

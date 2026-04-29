@@ -60,7 +60,7 @@
             const saved = localStorage.getItem('nova_colors');
             if (saved) {
                 try {
-                    this.currentColors = JSON.parse(saved);
+                    this.currentColors = this.sanitizeColors(JSON.parse(saved));
                 } catch (e) {
                     this.currentColors = { ...this.presets.default };
                 }
@@ -79,8 +79,41 @@
             
             Object.keys(this.currentColors).forEach(key => {
                 const value = this.currentColors[key];
-                root.style.setProperty(`--nova-${key}-color`, value);
+                if (this.isAllowedColorKey(key) && this.isSafeColorValue(value)) {
+                    root.style.setProperty(`--nova-${key}-color`, value);
+                }
             });
+        },
+
+        /**
+         * 仅允许预定义颜色键，避免导入任意CSS变量名
+         */
+        isAllowedColorKey: function(key) {
+            return Object.prototype.hasOwnProperty.call(this.presets.default, key);
+        },
+
+        /**
+         * 仅允许安全的CSS颜色值，避免通过导入配置注入任意CSS片段
+         */
+        isSafeColorValue: function(value) {
+            if (typeof value !== 'string') return false;
+            return /^(#[0-9a-fA-F]{3,8}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)|hsla?\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)|[a-zA-Z]+)$/.test(value.trim());
+        },
+
+        sanitizeColors: function(colors) {
+            const sanitized = { ...this.presets.default };
+
+            if (!colors || typeof colors !== 'object') {
+                return sanitized;
+            }
+
+            Object.keys(this.presets.default).forEach(key => {
+                if (this.isSafeColorValue(colors[key])) {
+                    sanitized[key] = colors[key].trim();
+                }
+            });
+
+            return sanitized;
         },
 
         /**
@@ -111,8 +144,12 @@
                 if (e.target.classList.contains('nova-color-picker')) {
                     const colorKey = e.target.dataset.color;
                     const colorValue = e.target.value;
-                    
-                    this.currentColors[colorKey] = colorValue;
+
+                    if (!this.isAllowedColorKey(colorKey) || !this.isSafeColorValue(colorValue)) {
+                        return;
+                    }
+
+                    this.currentColors[colorKey] = colorValue.trim();
                     this.applyColors();
                     this.saveColors();
                     this.updatePreview();
@@ -190,7 +227,7 @@
             reader.onload = (e) => {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    this.currentColors = { ...imported };
+                    this.currentColors = this.sanitizeColors(imported);
                     this.applyColors();
                     this.saveColors();
                     this.updatePreview();

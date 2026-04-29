@@ -46,7 +46,7 @@ get_header();
                         <ul class="recent-posts-list">
                             <?php foreach ($recent_posts as $post) : setup_postdata($post); ?>
                                 <li>
-                                    <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+                                    <a href="<?php echo esc_url(get_permalink()); ?>"><?php the_title(); ?></a>
                                     <span class="post-date"><?php echo esc_html(get_the_date('Y-m-d')); ?></span>
                                 </li>
                             <?php endforeach; wp_reset_postdata(); ?>

@@ -41,7 +41,7 @@
                         <p class="footer-links">
                             <span class="footer-link-list">
                                 <?php foreach ($bookmarks as $bookmark) : ?>
-                                    <a href="<?php echo esc_url($bookmark->link_url); ?>" target="_blank" rel="nofollow">
+                                    <a href="<?php echo esc_url($bookmark->link_url); ?>" target="_blank" rel="nofollow noopener noreferrer">
                                         <?php echo esc_html($bookmark->link_name); ?>
                                     </a>
                                 <?php endforeach; ?>
@@ -57,17 +57,17 @@
                 <?php if ($footer_copyright) : ?>
                     <?php echo wp_kses_post($footer_copyright); ?>
                 <?php else : ?>
-                    &copy; <?php echo date('Y'); ?> 
-                    <a href="<?php echo esc_url(home_url('/')); ?>"><?php bloginfo('name'); ?></a>
+                    &copy; <?php echo esc_html(date_i18n('Y')); ?> 
+                    <a href="<?php echo esc_url(home_url('/')); ?>"><?php echo esc_html(get_bloginfo('name')); ?></a>
                     <?php esc_html_e('保留所有权利。', 'nova'); ?>
                 <?php endif; ?>
                 
                 <?php if ($footer_icp) : ?>
-                    &nbsp;<a rel="nofollow" target="_blank" href="http://www.beian.miit.gov.cn/"><?php echo esc_html($footer_icp); ?></a>
+                    &nbsp;<a rel="nofollow noopener noreferrer" target="_blank" href="<?php echo esc_url('https://beian.miit.gov.cn/'); ?>"><?php echo esc_html($footer_icp); ?></a>
                 <?php endif; ?>
                 
-                <?php if ($footer_gaba) : ?>
-                    &nbsp;<a rel="nofollow" target="_blank" href="<?php echo esc_url($footer_gaba_url); ?>">
+                <?php if ($footer_gaba && $footer_gaba_url) : ?>
+                    &nbsp;<a rel="nofollow noopener noreferrer" target="_blank" href="<?php echo esc_url($footer_gaba_url); ?>">
                         <?php echo esc_html($footer_gaba); ?>
                     </a>
                 <?php endif; ?>
@@ -78,7 +78,7 @@
                         WordPress
                     </a>
                     <?php esc_html_e('构建，使用', 'nova'); ?> 
-                    <a href="https://github.com/motao123/nova-wordpress-theme" target="_blank" rel="noopener noreferrer">
+                    <a href="<?php echo esc_url('https://github.com/motao123/nova-wordpress-theme'); ?>" target="_blank" rel="noopener noreferrer">
                         Nova Theme
                     </a>
                 <?php endif; ?>

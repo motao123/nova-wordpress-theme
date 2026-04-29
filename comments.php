@@ -24,9 +24,6 @@ if (post_password_required()) {
         $consent = empty($commenter['comment_author_email']) ? '' : ' checked="checked"';
         $fields['cookies'] = '<div class="comment-form-cookies-consent"><input id="wp-comment-cookies-consent" name="wp-comment-cookies-consent" type="checkbox" value="yes"' . $consent . ' />' .
                              '<label for="wp-comment-cookies-consent">' . esc_html__('在浏览器中保存我的昵称和电子邮件，以便下次发表评论', 'nova') . '</label></div>';
-        if (isset($args['fields']) && !isset($args['fields']['cookies'])) {
-            $args['fields']['cookies'] = $fields['cookies'];
-        }
     }
 
     // 添加表单字段（昵称、邮箱、网址）
@@ -91,7 +88,7 @@ if (post_password_required()) {
             } else {
                 printf(
                     esc_html(_nx('%s 条评论', '%s 条评论', $comment_count, '评论标题', 'nova')),
-                    number_format_i18n($comment_count)
+                    esc_html(number_format_i18n($comment_count))
                 );
             }
             ?>

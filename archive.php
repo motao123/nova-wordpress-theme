@@ -45,14 +45,14 @@ $home_style = get_theme_mod('nova_home_card_style', 'default');
                                     }
                                     ?>
                                     <div class="nova-card-image">
-                                        <a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>" aria-label="<?php the_title(); ?>" style="background-image: url(<?php echo esc_url($post_image); ?>);">
+                                        <a href="<?php echo esc_url(get_permalink()); ?>" title="<?php echo esc_attr(get_the_title()); ?>" aria-label="<?php echo esc_attr(get_the_title()); ?>" style="background-image: url(<?php echo esc_url($post_image); ?>);">
                                         </a>
                                     </div>
                                     
                                     <div class="nova-card-content">
                                         <div class="nova-card-meta">
                                             <h2 class="nova-card-title" itemprop="headline">
-                                                <a href="<?php the_permalink(); ?>" rel="bookmark"><?php the_title(); ?></a>
+                                                <a href="<?php echo esc_url(get_permalink()); ?>" rel="bookmark"><?php the_title(); ?></a>
                                             </h2>
                                         </div>
                                         
@@ -71,7 +71,7 @@ $home_style = get_theme_mod('nova_home_card_style', 'default');
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                                     <circle cx="12" cy="12" r="3"></circle>
                                                 </svg>
-                                                <?php echo nova_get_post_views(); ?>
+                                                <?php echo esc_html(nova_get_post_views()); ?>
                                             </span>
                                             <span class="nova-card-comments">
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -92,7 +92,7 @@ $home_style = get_theme_mod('nova_home_card_style', 'default');
                                     <!-- 文章内容 -->
                                     <div class="article-content">
                                         <h2 class="entry-title">
-                                            <a href="<?php the_permalink(); ?>" rel="bookmark" class="hoverColor"><?php the_title(); ?></a>
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" rel="bookmark" class="hoverColor"><?php the_title(); ?></a>
                                         </h2>
                                         
                                         <div class="entry-content">
@@ -114,7 +114,7 @@ $home_style = get_theme_mod('nova_home_card_style', 'default');
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                                     <circle cx="12" cy="12" r="3"></circle>
                                                 </svg>
-                                                <?php echo nova_get_post_views(); ?>
+                                                <?php echo esc_html(nova_get_post_views()); ?>
                                             </span>
                                             <span class="entry-comments">
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -128,8 +128,8 @@ $home_style = get_theme_mod('nova_home_card_style', 'default');
                                     <!-- 缩略图 -->
                                     <?php if (has_post_thumbnail()) : ?>
                                         <div class="entry-thumb">
-                                            <a href="<?php the_permalink(); ?>" class="thumb-link">
-                                                <?php the_post_thumbnail('medium', array('alt' => get_the_title())); ?>
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" class="thumb-link">
+                                                <?php the_post_thumbnail('medium', array('alt' => esc_attr(get_the_title()))); ?>
                                             </a>
                                         </div>
                                     <?php endif; ?>

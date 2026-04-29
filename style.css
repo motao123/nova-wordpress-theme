@@ -4,7 +4,7 @@ Theme URI: https://imotao.com
 Author: 陌涛
 Author URI: https://imotao.com
 Description: Nova - 专为内容创作者打造的WordPress主题。响应式设计，暗色模式，自定义配色，丰富功能，让写作更专注，让阅读更愉悦。
-Version: 1.5.3
+Version: 1.5.5
 License: GNU General Public License v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: nova
@@ -21,6 +21,67 @@ Tags: responsive-layout, accessibility-ready, custom-colors, grid-layout, blog, 
 /* ==========================================================================
    主题核心样式 - Nova WordPress Theme
    ========================================================================== */
+
+/* 文章过期提示 */
+.stale-post-notice {
+    margin: 0 0 1.5rem;
+    padding: 0.875rem 1rem;
+    border-left: 4px solid var(--nova-warning-color);
+    border-radius: 8px;
+    background: rgba(255, 195, 32, 0.12);
+    color: var(--nova-text-dark);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+}
+
+.stale-post-notice strong {
+    margin-right: 0.25rem;
+    color: var(--nova-warning-color);
+}
+
+.dark .stale-post-notice {
+    background: rgba(255, 195, 32, 0.1);
+    color: rgba(255, 255, 255, 0.82);
+}
+
+/* 代码块语言标签 */
+.has-code-language-label {
+    position: relative;
+}
+
+.code-language-label {
+    position: absolute;
+    top: 0.9rem;
+    left: 1.1rem;
+    right: auto;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.65rem;
+    padding: 0.18rem 0.7rem;
+    border-radius: 8px;
+    background: rgba(125, 211, 252, 0.12);
+    border: 1px solid rgba(125, 211, 252, 0.22);
+    color: #bae6fd;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    pointer-events: none;
+    box-shadow: none;
+}
+
+.has-code-language-label code {
+    display: block;
+    padding-top: 2.4rem;
+}
+
+.dark .code-language-label {
+    background: rgba(91, 192, 235, 0.14);
+    border-color: rgba(91, 192, 235, 0.25);
+    color: #b6ecff;
+}
 
 /* CSS变量定义 - 颜色系统 */
 :root {
@@ -2492,14 +2553,32 @@ form.comment-form.nova-style .form-submit input:active {
    ========================================================================== */
 
 pre {
-    background: #272822;
-    color: #f8f8f2;
-    padding: 1.5rem;
-    border-radius: 8px;
+    background: linear-gradient(180deg, #151b23 0%, #0d1117 100%);
+    color: #e6edf3;
+    padding: 1.35rem 1.5rem;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 14px;
     overflow-x: auto;
-    margin: 1.5rem 0;
+    margin: 1.75rem 0;
     font-size: 0.875rem;
-    line-height: 1.6;
+    line-height: 1.75;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(91, 192, 235, 0.45) transparent;
+}
+
+pre::-webkit-scrollbar {
+    height: 10px;
+}
+
+pre::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+pre::-webkit-scrollbar-thumb {
+    background: rgba(91, 192, 235, 0.42);
+    border: 3px solid #0d1117;
+    border-radius: 999px;
 }
 
 code {
@@ -2518,6 +2597,7 @@ pre code {
     padding: 0;
     border-radius: 0;
     font-size: inherit;
+    line-height: inherit;
     word-break: normal;
 }
 
@@ -2537,25 +2617,25 @@ pre code {
     }
 }
 
-/* 代码高亮配色 - Monokai主题 */
+/* 代码高亮配色 - GitHub Dark 风格 */
 .hljs {
     display: block;
     overflow-x: auto;
-    padding: 0.5em;
-    background: #272822;
-    color: #f8f8f2;
+    padding: 0;
+    background: transparent;
+    color: #e6edf3;
 }
 
 .hljs-comment,
 .hljs-quote {
-    color: #75715e;
+    color: #8b949e;
     font-style: italic;
 }
 
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-addition {
-    color: #f92672;
+    color: #ff7b72;
 }
 
 .hljs-number,
@@ -2564,7 +2644,7 @@ pre code {
 .hljs-literal,
 .hljs-doctag,
 .hljs-regexp {
-    color: #e6db74;
+    color: #a5d6ff;
 }
 
 .hljs-title,
@@ -2572,7 +2652,7 @@ pre code {
 .hljs-name,
 .hljs-selector-id,
 .hljs-selector-class {
-    color: #a6e22e;
+    color: #d2a8ff;
 }
 
 .hljs-attribute,
@@ -2581,7 +2661,7 @@ pre code {
 .hljs-template-variable,
 .hljs-class .hljs-title,
 .hljs-type {
-    color: #f92672;
+    color: #ffa657;
 }
 
 .hljs-symbol,
@@ -2592,16 +2672,16 @@ pre code {
 .hljs-selector-attr,
 .hljs-selector-pseudo,
 .hljs-link {
-    color: #ae81ff;
+    color: #79c0ff;
 }
 
 .hljs-built_in,
 .hljs-deletion {
-    color: #66d9ef;
+    color: #7ee787;
 }
 
 .hljs-formula {
-    background: #272822;
+    background: rgba(110, 118, 129, 0.18);
 }
 
 .hljs-emphasis {
@@ -2615,27 +2695,65 @@ pre code {
 /* 代码块行号 */
 .hljs-ln-numbers {
     text-align: right;
-    color: #75715e;
-    border-right: 1px solid #75715e;
-    padding-right: 0.5em;
-    margin-right: 0.5em;
+    color: #6e7681;
+    border-right: 1px solid rgba(148, 163, 184, 0.16);
+    padding-right: 0.9em !important;
+    user-select: none;
 }
 
 .hljs-ln-code {
-    padding-left: 0.5em;
+    padding-left: 1em !important;
 }
 
 /* 代码块包装器 */
 .code-block-wrapper {
     position: relative;
-    margin: 1.5rem 0;
+    margin: 1.85rem 0;
+    max-width: 100%;
+    border-radius: 16px;
 }
 
 .code-block-wrapper pre {
     margin: 0;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
+    padding: 3.5rem 1.5rem 1.45rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
+
+.code-block-wrapper .has-code-language-label code {
+    padding-top: 0;
+}
+
+.copy-code-button {
+    position: absolute;
+    top: 0.8rem;
+    right: 1rem;
+    z-index: 3;
+    padding: 0.38rem 0.78rem;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #c9d1d9;
+    cursor: pointer;
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.2;
+    opacity: 0.92;
+    transition: var(--nova-transition);
+}
+
+.copy-code-button:hover,
+.copy-code-button:focus-visible {
+    opacity: 1;
+    color: #08111f;
+    background: linear-gradient(135deg, #7dd3fc 0%, var(--nova-primary-color) 100%);
+    border-color: rgba(125, 211, 252, 0.85);
+    box-shadow: 0 8px 24px rgba(91, 192, 235, 0.28);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.copy-code-button::before { content: none; }
 
 /* 代码块标题 */
 .code-block-title {
@@ -2668,6 +2786,39 @@ pre code {
     pre {
         font-size: 0.75rem;
         padding: 1rem;
+    }
+    
+    .code-block-wrapper {
+        margin: 1.25rem 0;
+        border-radius: 12px;
+    }
+    
+    .code-block-wrapper pre {
+        padding: 3.25rem 1rem 1rem;
+        border-radius: 12px;
+    }
+    
+    .code-language-label {
+        top: 0.74rem;
+        left: 0.85rem;
+        min-height: 1.55rem;
+        padding: 0.18rem 0.55rem;
+        font-size: 0.62rem;
+    }
+    
+    .has-code-language-label code {
+        padding-top: 2.15rem;
+    }
+    
+    .code-block-wrapper .has-code-language-label code {
+        padding-top: 0;
+    }
+    
+    .copy-code-button {
+        top: 0.72rem;
+        right: 0.75rem;
+        padding: 0.36rem 0.68rem;
+        font-size: 0.68rem;
     }
     
     .code-block-title {
@@ -3838,6 +3989,18 @@ h4.toc-active {
     margin: 0.25rem 0;
 }
 
+.comment-content .comment-markdown-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0.75rem 0;
+    border-radius: 6px;
+}
+
+.comment-content p > .comment-markdown-image:only-child {
+    margin-bottom: 0.5rem;
+}
+
 /* 暗色模式 */
 .dark .comment-content code {
     background: #2a2a2a;
@@ -3863,6 +4026,48 @@ h4.toc-active {
 
 .dark .qr-tip {
     color: #9d9d9d;
+}
+
+.word-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.share-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.share-action-button {
+    border: 1px solid var(--nova-border-color);
+    border-radius: 999px;
+    background: var(--nova-bg-secondary);
+    color: var(--nova-text-dark);
+    cursor: pointer;
+    padding: 0.55rem 1rem;
+    font-size: 0.875rem;
+    transition: var(--nova-transition);
+}
+
+.share-action-button:hover {
+    border-color: var(--nova-primary-color);
+    color: var(--nova-primary-color);
+    transform: translateY(-1px);
+}
+
+.dark .share-action-button {
+    background: #2a2a2b;
+    color: rgba(255, 255, 255, 0.78);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .share-action-button:hover {
+    border-color: #f1636b;
+    color: #f1636b;
 }
 
 /* ==========================================================================
@@ -4188,9 +4393,17 @@ h4.toc-active {
     position: fixed;
     top: 0;
     left: 0;
+    width: 100%;
     height: 3px;
+    background: rgba(0, 0, 0, 0.08);
+    z-index: 100000;
+    pointer-events: none;
+}
+
+.reading-progress-bar {
+    height: 100%;
+    width: 0;
     background: var(--nova-primary-color);
-    z-index: 9999;
     transition: width 0.1s ease;
     box-shadow: 0 0 10px rgba(91, 192, 235, 0.5);
 }

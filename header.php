@@ -6,10 +6,18 @@
  */
 ?>
 <!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
 <script>
 // 初始主题设置
 (function() {
-    const theme = localStorage.getItem('theme') || 'auto';
+    let theme = 'auto';
+    try {
+        theme = localStorage.getItem('theme') || 'auto';
+    } catch (e) {}
+    if (!['dark', 'light', 'auto'].includes(theme)) {
+        theme = 'auto';
+    }
     const html = document.documentElement;
     html.classList.remove('dark', 'light', 'auto');
     if (theme === 'dark') {
@@ -24,9 +32,7 @@
     }
 })();
 </script>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta charset="<?php echo esc_attr(get_bloginfo('charset')); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="profile" href="https://gmpg.org/xfn/11">
@@ -50,14 +56,14 @@
                     ?>
                     <h1 class="site-title">
                         <a href="<?php echo esc_url(home_url('/')); ?>" rel="home">
-                            <?php bloginfo('name'); ?>
+                            <?php echo esc_html(get_bloginfo('name')); ?>
                         </a>
                     </h1>
                     <?php
                 else :
                     ?>
                     <a class="site-title" href="<?php echo esc_url(home_url('/')); ?>" rel="home">
-                        <?php bloginfo('name'); ?>
+                        <?php echo esc_html(get_bloginfo('name')); ?>
                     </a>
                     <?php
                 endif;
@@ -113,7 +119,7 @@
     <!-- 搜索框 -->
     <div class="site-search none">
         <form method="get" class="site-form flex" action="<?php echo esc_url(home_url('/')); ?>">
-            <input type="search" class="field" placeholder="<?php esc_attr_e('输入关键词进行搜索…', 'nova'); ?>" maxlength="2048" autocomplete="off" value="<?php echo get_search_query(); ?>" name="s" required>
+            <input type="search" class="field" placeholder="<?php esc_attr_e('输入关键词进行搜索…', 'nova'); ?>" maxlength="2048" autocomplete="off" value="<?php echo esc_attr(get_search_query()); ?>" name="s" required>
             <button type="button" class="iconButton closeFind" aria-label="<?php esc_attr_e('关闭搜索', 'nova'); ?>">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

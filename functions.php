@@ -10,7 +10,7 @@
  * @Last Modified time: 2025-12-31
  * 
  * @package Nova
- * @version 1.5.3
+ * @version 1.5.5
  */
 
 // 防止直接访问
@@ -19,12 +19,9 @@ if (!defined('ABSPATH')) {
 }
 
 // 定义主题版本
-define('NOVA_VERSION', '1.5.3');
+define('NOVA_VERSION', '1.5.5');
 define('NOVA_DIR', get_template_directory());
 define('NOVA_URI', get_template_directory_uri());
-
-// 加载Markdown解析器
-require_once NOVA_DIR . '/includes/Markdown.php';
 
 /**
  * 设置主题功能
@@ -158,7 +155,6 @@ function nova_setup() {
         ),
         'theme_mods' => array(
             'nova_footer_copyright' => __('© 2025 您的网站名称. 保留所有权利.', 'nova'),
-            'nova_enable_markdown' => true,
             'nova_enable_reading_progress' => true,
         ),
         'nav_menus' => array(
@@ -189,7 +185,25 @@ add_action('after_setup_theme', 'nova_setup');
  * 获取CDN基础URL
  */
 function nova_get_cdn_url() {
-    return get_theme_mod('nova_cdn_url', 'https://cdnjs.cloudflare.com/ajax/libs');
+    return nova_sanitize_cdn_url(get_theme_mod('nova_cdn_url', 'https://cdnjs.cloudflare.com/ajax/libs'));
+}
+
+/**
+ * 限制前端公共库 CDN 为主题内置白名单，避免异常配置导致加载非预期第三方脚本。
+ */
+function nova_sanitize_cdn_url($url) {
+    $allowed_cdn_urls = array(
+        'https://cdnjs.cloudflare.com/ajax/libs',
+        'https://s4.zstatic.net/ajax/libs',
+        'https://cdnjs.snrat.com/ajax/libs',
+        'https://lib.baomitu.com',
+        'https://cdnjs.loli.net/ajax/libs',
+        'https://use.sevencdn.com/ajax/libs',
+    );
+
+    $url = untrailingslashit(esc_url_raw($url));
+
+    return in_array($url, $allowed_cdn_urls, true) ? $url : 'https://cdnjs.cloudflare.com/ajax/libs';
 }
 
 /**
@@ -321,6 +335,12 @@ function nova_enqueue_scripts() {
         'nonce'   => wp_create_nonce('nova-nonce'),
         'debug'   => defined('WP_DEBUG') && WP_DEBUG,
         'enableReadingProgress' => get_theme_mod('nova_enable_reading_progress', true),
+        'enableTOC' => get_theme_mod('nova_enable_toc', true),
+        'enableImageZoom' => get_theme_mod('nova_enable_image_zoom', true),
+        'enableQRCodeShare' => get_theme_mod('nova_enable_qrcode_share', true),
+        'enableCodeCopy' => get_theme_mod('nova_enable_code_copy', true),
+        'enableCodeLanguageLabels' => get_theme_mod('nova_enable_code_language_labels', true),
+        'enablePostLike' => get_theme_mod('nova_enable_post_like', true),
     ));
     
     // 评论回复脚本
@@ -406,11 +426,27 @@ function nova_get_reading_time($post_id = null) {
         $post_id = get_the_ID();
     }
     
-    $content = get_post_field('post_content', $post_id);
-    $word_count = str_word_count(strip_tags($content));
+    $word_count = nova_get_post_word_count($post_id);
     $reading_time = ceil($word_count / 200); // 假设每分钟阅读200字
     
-    return $reading_time;
+    return max(1, $reading_time);
+}
+
+/**
+ * 获取文章字数（兼容中英文）
+ */
+function nova_get_post_word_count($post_id = null) {
+    if (!$post_id) {
+        $post_id = get_the_ID();
+    }
+
+    $content = wp_strip_all_tags(strip_shortcodes((string) get_post_field('post_content', $post_id)));
+    $content = html_entity_decode($content, ENT_QUOTES, get_bloginfo('charset'));
+
+    preg_match_all('/[\x{4e00}-\x{9fa5}]/u', $content, $cjk_matches);
+    preg_match_all('/[A-Za-z0-9]+(?:[\'’\-][A-Za-z0-9]+)*/u', $content, $latin_matches);
+
+    return count($cjk_matches[0]) + count($latin_matches[0]);
 }
 
 /**
@@ -496,18 +532,46 @@ function nova_set_post_views($post_id = null) {
 }
 
 /**
+ * 获取用于公开 AJAX 限频的客户端指纹哈希
+ *
+ * 仅用于 transient key，不存储明文 IP/UA。
+ */
+function nova_get_ajax_rate_hash() {
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
+    if (function_exists('wp_privacy_anonymize_ip')) {
+        $ip = wp_privacy_anonymize_ip($ip);
+    }
+
+    $ua = isset($_SERVER['HTTP_USER_AGENT']) ? substr(sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])), 0, 160) : 'unknown';
+    $user_part = is_user_logged_in() ? 'user_' . get_current_user_id() : 'guest';
+
+    return wp_hash($user_part . '|' . $ip . '|' . $ua);
+}
+
+/**
  * AJAX更新阅读量
  */
 function nova_update_post_views() {
     // 检查nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'nova-nonce')) {
+    $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+    if (!$nonce || !wp_verify_nonce($nonce, 'nova-nonce')) {
         wp_send_json_error(array('message' => 'Nonce验证失败'));
         return;
     }
     
-    $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+    $post_id = isset($_POST['post_id']) ? absint(wp_unslash($_POST['post_id'])) : 0;
+    $post = $post_id ? get_post($post_id) : null;
     
-    if ($post_id && get_post($post_id)) {
+    if ($post && $post->post_status === 'publish') {
+        $rate_key = 'nova_view_' . $post_id . '_' . nova_get_ajax_rate_hash();
+
+        if (get_transient($rate_key)) {
+            wp_send_json_error(array('message' => '请求过于频繁'));
+            return;
+        }
+
+        set_transient($rate_key, 1, HOUR_IN_SECONDS);
+
         // 获取当前阅读量
         $current_views = nova_get_post_views($post_id);
         
@@ -596,7 +660,7 @@ function nova_customize_register($wp_customize) {
     // CDN基础URL
     $wp_customize->add_setting('nova_cdn_url', array(
         'default'           => 'https://cdnjs.cloudflare.com/ajax/libs',
-        'sanitize_callback' => 'esc_url_raw',
+        'sanitize_callback' => 'nova_sanitize_cdn_url',
     ));
     
     $wp_customize->add_control('nova_cdn_url', array(
@@ -662,19 +726,6 @@ function nova_customize_register($wp_customize) {
         'priority' => 28,
     ));
     
-    // Markdown评论支持
-    $wp_customize->add_setting('nova_enable_markdown', array(
-        'default'           => false,
-        'sanitize_callback' => 'wp_validate_boolean',
-    ));
-    
-    $wp_customize->add_control('nova_enable_markdown', array(
-        'label'       => __('启用Markdown评论', 'nova'),
-        'description' => __('允许评论者使用Markdown格式（**粗体**、*斜体*、`代码`、[链接](url)等）', 'nova'),
-        'section'     => 'nova_features',
-        'type'        => 'checkbox',
-    ));
-    
     // 阅读进度百分比
     $wp_customize->add_setting('nova_enable_reading_progress', array(
         'default'           => true,
@@ -686,6 +737,75 @@ function nova_customize_register($wp_customize) {
         'description' => __('在文章页面顶部显示阅读进度条，实时反映文章阅读进度', 'nova'),
         'section'     => 'nova_features',
         'type'        => 'checkbox',
+    ));
+
+    $feature_toggles = array(
+        'nova_enable_toc' => array(
+            'label' => __('启用文章目录', 'nova'),
+            'description' => __('自动根据正文中的 H2-H4 标题生成目录。', 'nova'),
+            'default' => true,
+        ),
+        'nova_enable_image_zoom' => array(
+            'label' => __('启用图片点击放大', 'nova'),
+            'description' => __('允许读者点击正文图片查看大图。', 'nova'),
+            'default' => true,
+        ),
+        'nova_enable_qrcode_share' => array(
+            'label' => __('启用二维码分享', 'nova'),
+            'description' => __('在文章页点赞区域追加二维码分享按钮。', 'nova'),
+            'default' => true,
+        ),
+        'nova_enable_code_copy' => array(
+            'label' => __('启用代码块复制按钮', 'nova'),
+            'description' => __('为代码块自动添加复制按钮。', 'nova'),
+            'default' => true,
+        ),
+        'nova_enable_code_language_labels' => array(
+            'label' => __('启用代码语言标签', 'nova'),
+            'description' => __('在代码块顶部显示 PHP、JS、CSS 等语言名。', 'nova'),
+            'default' => true,
+        ),
+        'nova_enable_post_like' => array(
+            'label' => __('启用文章点赞', 'nova'),
+            'description' => __('在文章页显示点赞按钮并启用 AJAX 点赞。', 'nova'),
+            'default' => true,
+        ),
+        'nova_enable_stale_notice' => array(
+            'label' => __('启用文章过期提示', 'nova'),
+            'description' => __('当文章长时间未更新时，在正文前显示提醒。', 'nova'),
+            'default' => true,
+        ),
+    );
+
+    foreach ($feature_toggles as $setting_id => $config) {
+        $wp_customize->add_setting($setting_id, array(
+            'default'           => $config['default'],
+            'sanitize_callback' => 'wp_validate_boolean',
+        ));
+
+        $wp_customize->add_control($setting_id, array(
+            'label'       => $config['label'],
+            'description' => $config['description'],
+            'section'     => 'nova_features',
+            'type'        => 'checkbox',
+        ));
+    }
+
+    $wp_customize->add_setting('nova_stale_notice_days', array(
+        'default'           => 365,
+        'sanitize_callback' => 'absint',
+    ));
+
+    $wp_customize->add_control('nova_stale_notice_days', array(
+        'label'       => __('文章过期天数', 'nova'),
+        'description' => __('超过该天数未更新时显示过期提示，建议 180-730 天。', 'nova'),
+        'section'     => 'nova_features',
+        'type'        => 'number',
+        'input_attrs' => array(
+            'min'  => 30,
+            'max'  => 3650,
+            'step' => 1,
+        ),
     ));
     
     
@@ -923,7 +1043,7 @@ function nova_add_structured_data() {
         }
     }
     
-    echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>';
+    echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . '</script>';
 }
 add_action('wp_head', 'nova_add_structured_data');
 
@@ -957,19 +1077,33 @@ function nova_security_headers() {
 add_action('send_headers', 'nova_security_headers');
 
 /**
- * Markdown评论支持
+ * 文章过期提示
  */
-function nova_markdown_comments($comment_text) {
-    if (!get_theme_mod('nova_enable_markdown', false)) {
-        return $comment_text;
+function nova_stale_post_notice($post_id = null) {
+    if (!get_theme_mod('nova_enable_stale_notice', true)) {
+        return;
     }
-    
-    // 使用Markdown解析器
-    $parsed = Nova_Markdown::parse($comment_text);
-    
-    return $parsed;
+
+    $post_id = $post_id ? absint($post_id) : get_the_ID();
+    if (!$post_id || get_post_type($post_id) !== 'post') {
+        return;
+    }
+
+    $days = absint(get_theme_mod('nova_stale_notice_days', 365));
+    if ($days < 30) {
+        $days = 30;
+    }
+
+    $modified = get_post_modified_time('U', true, $post_id);
+    if (!$modified || (time() - $modified) < ($days * DAY_IN_SECONDS)) {
+        return;
+    }
+
+    echo '<div class="stale-post-notice" role="note">';
+    echo '<strong>' . esc_html__('内容时效提醒：', 'nova') . '</strong>';
+    echo esc_html(sprintf(__('本文最后更新于 %s，部分内容可能已经过时，请结合实际情况参考。', 'nova'), get_the_modified_date('', $post_id)));
+    echo '</div>';
 }
-add_filter('comment_text', 'nova_markdown_comments', 10, 1);
 
 /**
  * 面包屑导航
@@ -1177,14 +1311,25 @@ function nova_get_post_likes($post_id = null) {
  */
 function nova_post_like() {
     // 检查nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'nova-nonce')) {
+    $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+    if (!$nonce || !wp_verify_nonce($nonce, 'nova-nonce')) {
         wp_send_json_error(array('message' => 'Nonce验证失败'));
         return;
     }
     
-    $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+    $post_id = isset($_POST['post_id']) ? absint(wp_unslash($_POST['post_id'])) : 0;
+    $post = $post_id ? get_post($post_id) : null;
     
-    if ($post_id && get_post($post_id)) {
+    if ($post && $post->post_status === 'publish') {
+        $rate_key = 'nova_like_' . $post_id . '_' . nova_get_ajax_rate_hash();
+
+        if (get_transient($rate_key)) {
+            wp_send_json_error(array('message' => '您已经点赞过该文章'));
+            return;
+        }
+
+        set_transient($rate_key, 1, DAY_IN_SECONDS);
+
         // 获取当前点赞数
         $current_likes = nova_get_post_likes($post_id);
         
@@ -1259,7 +1404,7 @@ function nova_related_posts() {
             
             if (has_post_thumbnail()) {
                 echo '<a href="' . esc_url(get_permalink()) . '" class="related-post-thumb">';
-                the_post_thumbnail('thumbnail', array('alt' => get_the_title()));
+                the_post_thumbnail('thumbnail', array('alt' => esc_attr(get_the_title())));
                 echo '</a>';
             }
             

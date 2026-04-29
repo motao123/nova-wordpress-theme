@@ -22,11 +22,11 @@ get_header();
                     
                     <div class="author-stats">
                         <span class="stat-item">
-                            <strong><?php echo count_user_posts(get_the_author_meta('ID')); ?></strong>
+                            <strong><?php echo esc_html(count_user_posts(get_the_author_meta('ID'))); ?></strong>
                             <span><?php esc_html_e('篇文章', 'nova'); ?></span>
                         </span>
                         <span class="stat-item">
-                            <strong><?php echo get_comments_number(); ?></strong>
+                            <strong><?php echo esc_html(get_comments_number()); ?></strong>
                             <span><?php esc_html_e('条评论', 'nova'); ?></span>
                         </span>
                     </div>
@@ -42,7 +42,7 @@ get_header();
                                     <!-- 文章内容 -->
                                     <div class="article-content">
                                         <h2 class="entry-title">
-                                            <a href="<?php the_permalink(); ?>" rel="bookmark" class="hoverColor"><?php the_title(); ?></a>
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" rel="bookmark" class="hoverColor"><?php the_title(); ?></a>
                                         </h2>
                                         
                                         <div class="entry-content">
@@ -61,7 +61,7 @@ get_header();
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                                     <circle cx="12" cy="12" r="3"></circle>
                                                 </svg>
-                                                <?php echo nova_get_post_views(); ?>
+                                                <?php echo esc_html(nova_get_post_views()); ?>
                                             </span>
                                             <span class="entry-comments">
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -75,8 +75,8 @@ get_header();
                                     <!-- 缩略图 -->
                                     <?php if (has_post_thumbnail()) : ?>
                                         <div class="entry-thumb">
-                                            <a href="<?php the_permalink(); ?>" class="thumb-link">
-                                                <?php the_post_thumbnail('medium', array('alt' => get_the_title())); ?>
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" class="thumb-link">
+                                                <?php the_post_thumbnail('medium', array('alt' => esc_attr(get_the_title()))); ?>
                                             </a>
                                         </div>
                                     <?php endif; ?>

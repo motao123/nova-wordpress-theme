@@ -17,7 +17,7 @@ get_header();
                         <header class="entry-header">
                             <?php if (has_post_thumbnail()) : ?>
                                 <div class="post-thumbnail">
-                                    <?php the_post_thumbnail('large', array('alt' => get_the_title())); ?>
+                                    <?php the_post_thumbnail('large', array('alt' => esc_attr(get_the_title()))); ?>
                                 </div>
                             <?php endif; ?>
                             

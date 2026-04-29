@@ -38,7 +38,7 @@ get_header(); ?>
                                     if (has_post_thumbnail()) {
                                         ?>
                                         <div class="post-thumbnail">
-                                            <a href="<?php the_permalink(); ?>" aria-label="<?php the_title(); ?>">
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" aria-label="<?php echo esc_attr(get_the_title()); ?>">
                                                 <?php the_post_thumbnail('large'); ?>
                                             </a>
                                         </div>
@@ -47,7 +47,7 @@ get_header(); ?>
                                     ?>
                                     <div class="post-header">
                                         <h2 class="post-title">
-                                            <a href="<?php the_permalink(); ?>" aria-label="<?php the_title(); ?>"><?php the_title(); ?></a>
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" aria-label="<?php echo esc_attr(get_the_title()); ?>"><?php the_title(); ?></a>
                                         </h2>
                                         <div class="post-meta">
                                             <time datetime="<?php echo esc_attr(get_the_date('c')); ?>" itemprop="datePublished">
@@ -70,7 +70,7 @@ get_header(); ?>
                                     ?>
                                     <div class="post-header">
                                         <h2 class="post-title">
-                                            <a href="<?php the_permalink(); ?>" aria-label="<?php the_title(); ?>"><?php the_title(); ?></a>
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" aria-label="<?php echo esc_attr(get_the_title()); ?>"><?php the_title(); ?></a>
                                         </h2>
                                         <div class="post-meta">
                                             <time datetime="<?php echo esc_attr(get_the_date('c')); ?>" itemprop="datePublished">
@@ -109,7 +109,7 @@ get_header(); ?>
                                     ?>
                                     <div class="post-link">
                                         <h2 class="post-title">
-                                            <a href="<?php the_permalink(); ?>" aria-label="<?php the_title(); ?>"><?php the_title(); ?></a>
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" aria-label="<?php echo esc_attr(get_the_title()); ?>"><?php the_title(); ?></a>
                                         </h2>
                                         <div class="post-meta">
                                             <time datetime="<?php echo esc_attr(get_the_date('c')); ?>" itemprop="datePublished">
@@ -125,7 +125,7 @@ get_header(); ?>
                                     ?>
                                     <div class="post-header">
                                         <h2 class="post-title">
-                                            <a href="<?php the_permalink(); ?>" aria-label="<?php the_title(); ?>"><?php the_title(); ?></a>
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" aria-label="<?php echo esc_attr(get_the_title()); ?>"><?php the_title(); ?></a>
                                         </h2>
                                         <div class="post-meta">
                                             <time datetime="<?php echo esc_attr(get_the_date('c')); ?>" itemprop="datePublished">
@@ -148,7 +148,7 @@ get_header(); ?>
                                     ?>
                                     <div class="post-header">
                                         <h2 class="post-title">
-                                            <a href="<?php the_permalink(); ?>" aria-label="<?php the_title(); ?>"><?php the_title(); ?></a>
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" aria-label="<?php echo esc_attr(get_the_title()); ?>"><?php the_title(); ?></a>
                                         </h2>
                                         <div class="post-meta">
                                             <time datetime="<?php echo esc_attr(get_the_date('c')); ?>" itemprop="datePublished">
@@ -171,7 +171,7 @@ get_header(); ?>
                                     ?>
                                     <div class="post-header">
                                         <h2 class="post-title">
-                                            <a href="<?php the_permalink(); ?>" aria-label="<?php the_title(); ?>"><?php the_title(); ?></a>
+                                            <a href="<?php echo esc_url(get_permalink()); ?>" aria-label="<?php echo esc_attr(get_the_title()); ?>"><?php the_title(); ?></a>
                                         </h2>
                                         <div class="post-meta">
                                             <time datetime="<?php echo esc_attr(get_the_date('c')); ?>" itemprop="datePublished">

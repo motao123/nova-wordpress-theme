@@ -28,6 +28,25 @@
         }
     }
 
+    function storageGet(key, fallback = null) {
+        try {
+            return window.localStorage ? window.localStorage.getItem(key) : fallback;
+        } catch (error) {
+            debugWarn('localStorage读取失败:', error);
+            return fallback;
+        }
+    }
+
+    function storageSet(key, value) {
+        try {
+            if (window.localStorage) {
+                window.localStorage.setItem(key, value);
+            }
+        } catch (error) {
+            debugWarn('localStorage写入失败:', error);
+        }
+    }
+
     /**
      * 移动端菜单切换
      */
@@ -232,7 +251,8 @@
             anchor.addEventListener('click', function(e) {
                 const href = this.getAttribute('href');
                 if (href !== '#' && href.length > 1) {
-                    const target = document.querySelector(href);
+                    const targetId = decodeURIComponent(href.substring(1));
+                    const target = document.getElementById(targetId);
                     if (target) {
                         e.preventDefault();
                         target.scrollIntoView({
@@ -253,8 +273,16 @@
      * 文章阅读进度条
      */
     function initReadingProgress() {
+        if (typeof novaData !== 'undefined' && novaData.enableReadingProgress === false) {
+            return;
+        }
+
         // 仅在文章页面显示进度条
-        if (!document.querySelector('.single-post, .single-page')) {
+        if (!document.body.classList.contains('single') && !document.body.classList.contains('page')) {
+            return;
+        }
+
+        if (document.querySelector('.reading-progress')) {
             return;
         }
         
@@ -263,12 +291,15 @@
         
         const progressBar = document.createElement('div');
         progressBar.className = 'reading-progress';
-        progressBar.innerHTML = '<div class="reading-progress-bar"></div>';
         progressBar.setAttribute('role', 'progressbar');
         progressBar.setAttribute('aria-label', '阅读进度');
+        progressBar.setAttribute('aria-valuemin', '0');
+        progressBar.setAttribute('aria-valuemax', '100');
+
+        const progressBarInner = document.createElement('div');
+        progressBarInner.className = 'reading-progress-bar';
+        progressBar.appendChild(progressBarInner);
         document.body.appendChild(progressBar);
-        
-        const progressBarInner = progressBar.querySelector('.reading-progress-bar');
         
         let ticking = false;
         
@@ -291,6 +322,72 @@
         };
         
         window.addEventListener('scroll', requestTick);
+        window.addEventListener('resize', requestTick);
+        updateProgress();
+    }
+
+    function getCodeLanguage(codeBlock) {
+        const pre = codeBlock ? codeBlock.closest('pre') : null;
+        const candidates = [];
+
+        if (codeBlock) {
+            candidates.push(codeBlock.dataset.language, codeBlock.dataset.lang);
+            candidates.push(...Array.from(codeBlock.classList));
+        }
+
+        if (pre) {
+            candidates.push(pre.dataset.language, pre.dataset.lang);
+            candidates.push(...Array.from(pre.classList));
+        }
+
+        for (const candidate of candidates) {
+            if (!candidate) continue;
+            const normalized = String(candidate).trim().toLowerCase();
+            const match = normalized.match(/(?:^|\s)(?:language-|lang-)([a-z0-9_+#.-]+)/);
+            if (match && match[1] && match[1] !== 'hljs') {
+                return match[1];
+            }
+
+            if (/^[a-z0-9_+#.-]+$/.test(normalized) && !['hljs', 'wp-block-code', 'has-code-language-label', 'undefined', 'unknown', 'plain', 'plaintext', 'text', 'nohighlight'].includes(normalized)) {
+                return normalized;
+            }
+        }
+
+        if (codeBlock && codeBlock.result && codeBlock.result.language) {
+            return codeBlock.result.language;
+        }
+
+        const codeText = codeBlock ? codeBlock.textContent.trim() : '';
+        if (codeText) {
+            const languageHeuristics = [
+                [/^\s*(import\s+[\w.]+|from\s+[\w.]+\s+import\s+|def\s+\w+\s*\(|class\s+\w+\s*\(|if\s+__name__\s*==\s*['"]__main__['"])/m, 'python'],
+                [/(<\?php|\$\w+\s*=|function\s+\w+\s*\([^)]*\)\s*\{)/m, 'php'],
+                [/(const|let|var)\s+\w+\s*=|=>|console\.log\s*\(/m, 'javascript'],
+                [/^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\s+/im, 'sql'],
+                [/^\s*(#!\/bin\/(ba)?sh|sudo\s+|npm\s+|git\s+|cd\s+)/m, 'bash'],
+                [/(^|\n)\s*[.#]?[\w-]+\s*\{[^}]*:[^}]*\}/m, 'css'],
+                [/<[a-z][\s\S]*>/i, 'html']
+            ];
+
+            for (const [pattern, language] of languageHeuristics) {
+                if (pattern.test(codeText)) {
+                    return language;
+                }
+            }
+        }
+
+        if (typeof hljs !== 'undefined' && codeText) {
+            try {
+                const result = hljs.highlightAuto(codeText);
+                if (result && result.language && result.relevance >= 3) {
+                    return result.language;
+                }
+            } catch (error) {
+                debugWarn('代码语言自动识别失败:', error);
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -329,17 +426,27 @@
      * 复制代码块
      */
     function initCodeBlockCopy() {
+        if (typeof novaData !== 'undefined' && novaData.enableCodeCopy === false) {
+            return;
+        }
+
         document.querySelectorAll('pre code').forEach(codeBlock => {
             // 只对包含内容的代码块添加复制按钮
             if (!codeBlock.textContent.trim()) return;
-            
+
+            const pre = codeBlock.closest('pre');
+            if (!pre) return;
+
             // 检查是否已经有包装器
-            if (codeBlock.parentElement.classList.contains('code-block-wrapper')) {
+            if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrapper')) {
                 return;
             }
-            
+
             const wrapper = document.createElement('div');
             wrapper.className = 'code-block-wrapper';
+
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
             
             const button = document.createElement('button');
             button.className = 'copy-code-button';
@@ -347,7 +454,9 @@
             button.setAttribute('aria-label', '复制代码');
             
             button.addEventListener('click', function() {
-                const text = codeBlock.textContent;
+                const clone = codeBlock.cloneNode(true);
+                clone.querySelectorAll('.hljs-ln-numbers, .code-language-label').forEach(node => node.remove());
+                const text = clone.textContent.replace(/\n{3,}/g, '\n\n').trim();
                 
                 // 优先使用现代Clipboard API
                 if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -406,8 +515,6 @@
                 }
             }
             
-            codeBlock.parentNode.insertBefore(wrapper, codeBlock);
-            wrapper.appendChild(codeBlock);
             wrapper.appendChild(button);
         });
     }
@@ -417,7 +524,7 @@
      */
     function initDarkMode() {
         // 获取主题设置，默认为auto
-        const theme = localStorage.getItem('theme') || 'auto';
+        const theme = storageGet('theme', 'auto') || 'auto';
         
         // 应用主题
         applyTheme(theme);
@@ -495,7 +602,7 @@
                 const theme = this.dataset.theme;
                 
                 // 保存到localStorage
-                localStorage.setItem('theme', theme);
+                storageSet('theme', theme);
                 
                 // 应用主题
                 applyTheme(theme);
@@ -505,7 +612,7 @@
         // 监听系统主题变化（仅在auto模式下）
         if (window.matchMedia) {
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                const currentTheme = localStorage.getItem('theme') || 'auto';
+                const currentTheme = storageGet('theme', 'auto') || 'auto';
                 if (currentTheme === 'auto') {
                     applyTheme('auto');
                 }
@@ -561,7 +668,7 @@
         
         // 检查今天是否已统计
         const today = new Date().toDateString();
-        const viewed = localStorage.getItem(storageKey);
+        const viewed = storageGet(storageKey);
         
         debugLog('阅读量统计检查:', {
             postId: currentPostId,
@@ -575,7 +682,11 @@
             const controller = new AbortController();
             
             // 发送AJAX请求更新阅读量
-            const requestBody = 'action=nova_update_views&post_id=' + currentPostId + '&nonce=' + novaData.nonce;
+            const requestBody = new URLSearchParams({
+                action: 'nova_update_views',
+                post_id: currentPostId,
+                nonce: novaData.nonce
+            });
             
             debugLog('发送阅读量更新请求:', {
                 url: novaData.ajaxUrl,
@@ -587,7 +698,7 @@
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: requestBody,
+                body: requestBody.toString(),
                 signal: controller.signal
             })
             .then(response => {
@@ -601,7 +712,7 @@
                 debugLog('解析后的数据:', data);
                 if (data.success && data.data && typeof data.data.views !== 'undefined') {
                     // 只有在确认成功后才设置localStorage
-                    localStorage.setItem(storageKey, today);
+                    storageSet(storageKey, today);
                     
                     // 更新所有阅读量显示元素
                     const viewsElements = document.querySelectorAll('.views-count');
@@ -655,6 +766,15 @@
      * 文章点赞功能
      */
     function initPostLike() {
+        if (typeof novaData !== 'undefined' && novaData.enablePostLike === false) {
+            return;
+        }
+
+        if (typeof novaData === 'undefined') {
+            debugWarn('novaData未定义，点赞功能无法使用');
+            return;
+        }
+
         document.querySelectorAll('.entry-like-button').forEach(button => {
             button.addEventListener('click', function() {
                 // 防止重复点击
@@ -664,6 +784,11 @@
                 
                 const postId = this.dataset.postId;
                 const likeCountEl = this.querySelector('.like-count');
+
+                if (!postId || !/^\d+$/.test(postId) || !likeCountEl) {
+                    debugWarn('点赞按钮缺少有效文章ID或计数元素');
+                    return;
+                }
                 
                 // 立即更新UI反馈
                 this.classList.add('liked');
@@ -676,7 +801,11 @@
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: 'action=nova_post_like&post_id=' + postId + '&nonce=' + novaData.nonce
+                    body: new URLSearchParams({
+                        action: 'nova_post_like',
+                        post_id: postId,
+                        nonce: novaData.nonce
+                    }).toString()
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -753,6 +882,10 @@
      * 图片点击放大功能
      */
     function initImageZoom() {
+        if (typeof novaData !== 'undefined' && novaData.enableImageZoom === false) {
+            return;
+        }
+
         // 仅在有文章内容的页面启用
         const entryContent = document.querySelector('.entry-content');
         if (!entryContent) {
@@ -826,12 +959,17 @@
                 
                 // 如果是完整的URL，直接返回
                 if (url.startsWith('http://') || url.startsWith('https://')) {
-                    return url;
+                    try {
+                        const parsed = new URL(url);
+                        return ['http:', 'https:'].includes(parsed.protocol) ? parsed.href : '';
+                    } catch (e) {
+                        return '';
+                    }
                 }
                 
                 // 如果是相对路径，转换为绝对路径
                 if (url.startsWith('/')) {
-                    return window.location.origin + url;
+                    return new URL(url, window.location.origin).href;
                 }
                 
                 // 如果有baseURL
@@ -839,8 +977,8 @@
                     return new URL(url, window.location.href).href;
                 }
                 
-                // 其他情况
-                return url;
+                // 其他情况不处理，避免把非图片/非HTTP协议注入到查看器
+                return '';
             }
             
             image.addEventListener('click', function(e) {
@@ -889,63 +1027,61 @@
      * 文章目录TOC生成
      */
     function initTOC() {
+        if (typeof novaData !== 'undefined' && novaData.enableTOC === false) {
+            return;
+        }
+
         const entryContent = document.querySelector('.entry-content');
         if (!entryContent || !entryContent.querySelector('h2, h3, h4')) return;
+
+        if (entryContent.querySelector(':scope > .article-toc')) return;
         
-        const headings = entryContent.querySelectorAll('h2, h3, h4');
+        const headings = Array.from(entryContent.querySelectorAll('h2, h3, h4')).filter(heading => !heading.closest('.article-toc'));
         if (headings.length < 2) return; // 至少2个标题才显示目录
         
         // 创建TOC容器
         const tocContainer = document.createElement('details');
         tocContainer.className = 'article-toc';
-        tocContainer.innerHTML = `
-            <summary>目录</summary>
-            <nav class="toc-nav"></nav>
-        `;
-        
-        const tocNav = tocContainer.querySelector('.toc-nav');
+        tocContainer.open = true;
+
+        const tocSummary = document.createElement('summary');
+        tocSummary.textContent = '目录';
+        const tocNav = document.createElement('nav');
+        tocNav.className = 'toc-nav';
+        tocContainer.appendChild(tocSummary);
+        tocContainer.appendChild(tocNav);
         const tocList = document.createElement('ul');
         tocList.className = 'toc-list';
         
-        let tocHTML = '';
-        let currentLevel = 0;
         let tocCount = 0;
         
-        headings.forEach((heading, index) => {
+        headings.forEach((heading) => {
             // 获取标题级别
-            const level = parseInt(heading.tagName.substring(1));
+            const level = parseInt(heading.tagName.substring(1), 10);
             const title = heading.textContent.trim();
             
             // 如果没有ID，添加一个
             if (!heading.id) {
                 tocCount++;
-                heading.id = 'toc-' + tocCount;
+                const slug = title
+                    .toLowerCase()
+                    .replace(/[^\u4e00-\u9fa5a-z0-9_-]+/g, '-')
+                    .replace(/^-+|-+$/g, '') || 'section';
+                heading.id = 'toc-' + slug + '-' + tocCount;
             }
-            
-            // 构建目录HTML
-            if (level > currentLevel) {
-                // 进入更深层级
-                tocHTML += '<ul class="toc-list dept-' + level + '">';
-            } else if (level < currentLevel) {
-                // 返回上一层
-                tocHTML += '</li></ul>'.repeat(currentLevel - level);
-            } else if (index > 0) {
-                // 同级
-                tocHTML += '</li>';
-            }
-            
-            tocHTML += '<li class="toc-item level-' + level + '">';
-            tocHTML += '<a href="#' + heading.id + '" class="toc-link">' + title + '</a>';
-            
-            currentLevel = level;
+
+            const item = document.createElement('li');
+            item.className = 'toc-item level-' + level;
+
+            const link = document.createElement('a');
+            link.href = '#' + heading.id;
+            link.dataset.targetId = heading.id;
+            link.className = 'toc-link';
+            link.textContent = title;
+
+            item.appendChild(link);
+            tocList.appendChild(item);
         });
-        
-        // 闭合所有未闭合的标签
-        if (currentLevel > 0) {
-            tocHTML += '</li>' + '</ul>'.repeat(currentLevel - 1);
-        }
-        
-        tocList.innerHTML = tocHTML;
         tocNav.appendChild(tocList);
         
         // 插入到文章内容之前
@@ -955,7 +1091,7 @@
         tocNav.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                const targetId = this.getAttribute('href').substring(1);
+                const targetId = this.dataset.targetId || this.getAttribute('href').substring(1);
                 const target = document.getElementById(targetId);
                 if (target) {
                     const headerOffset = 80;
@@ -994,7 +1130,9 @@
             });
             
             if (currentHeading) {
-                const activeLink = tocNav.querySelector('a[href="#' + currentHeading.id + '"]');
+                const activeLink = Array.from(tocNav.querySelectorAll('.toc-link')).find(link => {
+                    return (link.dataset.targetId || link.getAttribute('href').substring(1)) === currentHeading.id;
+                });
                 if (activeLink) {
                     activeLink.classList.add('active');
                 }
@@ -1009,24 +1147,30 @@
                 ticking = true;
             }
         });
+        updateActiveHeading();
     }
 
     /**
      * 二维码分享功能
      */
     function initQRCodeShare() {
-        // 检查是否在单篇文章页面
-        if (!document.body.classList.contains('single')) return;
-        
-        // 检查QRCode库是否已加载
-        if (typeof QRCode === 'undefined') {
-            debugWarn('QRCode库未加载');
+        if (typeof novaData !== 'undefined' && novaData.enableQRCodeShare === false) {
             return;
         }
-        
-        // 查找点赞按钮作为插入点
-        const likeWrapper = document.querySelector('.entry-like-wrapper');
-        if (!likeWrapper) return;
+
+        // 检查是否在单篇文章页面
+        if (!document.body.classList.contains('single')) return;
+
+        // 查找点赞按钮作为插入点；如果点赞关闭，则自动创建分享区域
+        let likeWrapper = document.querySelector('.entry-like-wrapper');
+        if (!likeWrapper) {
+            const entryFooter = document.querySelector('.entry-footer');
+            if (!entryFooter) return;
+
+            likeWrapper = document.createElement('div');
+            likeWrapper.className = 'entry-like-wrapper entry-share-only';
+            entryFooter.appendChild(likeWrapper);
+        }
         
         // 创建分享按钮
         const shareButton = document.createElement('button');
@@ -1055,6 +1199,14 @@
                 <h3>扫码分享</h3>
                 <div class="qr-code-container"></div>
                 <p class="qr-tip">使用手机扫描二维码分享文章</p>
+                <div class="share-actions">
+                    <button type="button" class="share-action-button wechat-share-button">微信扫码</button>
+                    <button type="button" class="share-action-button weibo-share-button">微博</button>
+                    <button type="button" class="share-action-button x-share-button">X</button>
+                    <button type="button" class="share-action-button facebook-share-button">Facebook</button>
+                    <button type="button" class="share-action-button telegram-share-button">Telegram</button>
+                    <button type="button" class="share-action-button copy-link-button">复制链接</button>
+                </div>
             </div>
         `;
         document.body.appendChild(modal);
@@ -1062,6 +1214,61 @@
         const backdrop = modal.querySelector('.qr-modal-backdrop');
         const closeBtn = modal.querySelector('.qr-modal-close');
         const qrContainer = modal.querySelector('.qr-code-container');
+        const wechatShareBtn = modal.querySelector('.wechat-share-button');
+        const weiboShareBtn = modal.querySelector('.weibo-share-button');
+        const xShareBtn = modal.querySelector('.x-share-button');
+        const facebookShareBtn = modal.querySelector('.facebook-share-button');
+        const telegramShareBtn = modal.querySelector('.telegram-share-button');
+        const copyLinkBtn = modal.querySelector('.copy-link-button');
+
+        function getShareData() {
+            return {
+                title: document.title,
+                text: document.querySelector('meta[name="description"]')?.content || document.title,
+                url: window.location.href
+            };
+        }
+
+        function setTemporaryButtonText(button, text) {
+            const originalText = button.textContent;
+            button.textContent = text;
+            setTimeout(() => {
+                button.textContent = originalText;
+            }, 1800);
+        }
+
+        function copyText(text, button) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    setTemporaryButtonText(button, '已复制');
+                }).catch(() => {
+                    copyShareFallback(text, button);
+                });
+                return;
+            }
+
+            copyShareFallback(text, button);
+        }
+
+        function copyShareFallback(text, button) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.setAttribute('readonly', 'readonly');
+            textArea.style.position = 'fixed';
+            textArea.style.top = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                setTemporaryButtonText(button, successful ? '已复制' : '复制失败');
+            } catch (error) {
+                debugError('复制分享链接失败:', error);
+                setTemporaryButtonText(button, '复制失败');
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        }
         
         // 点击分享按钮
         shareButton.addEventListener('click', function() {
@@ -1069,16 +1276,53 @@
             document.body.style.overflow = 'hidden';
             
             // 生成二维码
-            qrContainer.innerHTML = ''; // 清空旧二维码
+            qrContainer.textContent = ''; // 清空旧二维码
             const currentUrl = window.location.href;
-            new QRCode(qrContainer, {
-                text: currentUrl,
-                width: 200,
-                height: 200,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
-            });
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrContainer, {
+                    text: currentUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } else {
+                qrContainer.innerHTML = '<p class="qr-tip">二维码组件加载失败，可使用下方按钮分享或复制链接。</p>';
+                debugWarn('QRCode库未加载');
+            }
+        });
+
+        function openShareUrl(url) {
+            window.open(url, '_blank', 'noopener,noreferrer,width=760,height=620');
+        }
+
+        wechatShareBtn.addEventListener('click', function() {
+            qrContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+
+        weiboShareBtn.addEventListener('click', function() {
+            const shareData = getShareData();
+            openShareUrl('https://service.weibo.com/share/share.php?url=' + encodeURIComponent(shareData.url) + '&title=' + encodeURIComponent(shareData.title));
+        });
+
+        xShareBtn.addEventListener('click', function() {
+            const shareData = getShareData();
+            openShareUrl('https://twitter.com/intent/tweet?url=' + encodeURIComponent(shareData.url) + '&text=' + encodeURIComponent(shareData.title));
+        });
+
+        facebookShareBtn.addEventListener('click', function() {
+            const shareData = getShareData();
+            openShareUrl('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareData.url));
+        });
+
+        telegramShareBtn.addEventListener('click', function() {
+            const shareData = getShareData();
+            openShareUrl('https://t.me/share/url?url=' + encodeURIComponent(shareData.url) + '&text=' + encodeURIComponent(shareData.title));
+        });
+
+        copyLinkBtn.addEventListener('click', function() {
+            copyText(getShareData().url, this);
         });
         
         // 关闭模态框
@@ -1102,6 +1346,51 @@
     }
 
     /**
+     * 代码块语言标签
+     */
+    function initCodeLanguageLabels() {
+        if (typeof novaData !== 'undefined' && novaData.enableCodeLanguageLabels === false) {
+            return;
+        }
+
+        const languageMap = {
+            js: 'JavaScript',
+            javascript: 'JavaScript',
+            ts: 'TypeScript',
+            typescript: 'TypeScript',
+            php: 'PHP',
+            css: 'CSS',
+            html: 'HTML',
+            xml: 'XML',
+            json: 'JSON',
+            python: 'Python',
+            py: 'Python',
+            java: 'Java',
+            bash: 'Bash',
+            shell: 'Shell',
+            sh: 'Shell',
+            sql: 'SQL'
+        };
+
+        document.querySelectorAll('pre code').forEach(codeBlock => {
+            const pre = codeBlock.closest('pre');
+            if (!pre || pre.dataset.languageLabelReady === 'true') return;
+
+            const rawLanguage = getCodeLanguage(codeBlock);
+            if (!rawLanguage || ['undefined', 'unknown', 'plain', 'plaintext', 'text', 'nohighlight'].includes(String(rawLanguage).toLowerCase())) return;
+            const labelText = languageMap[rawLanguage] || rawLanguage.toUpperCase();
+
+            const label = document.createElement('span');
+            label.className = 'code-language-label';
+            label.textContent = labelText;
+
+            pre.classList.add('has-code-language-label');
+            pre.insertBefore(label, pre.firstChild);
+            pre.dataset.languageLabelReady = 'true';
+        });
+    }
+
+    /**
      * 初始化所有功能
      */
     function init() {
@@ -1113,6 +1402,7 @@
         initSmoothScroll();
         initReadingProgress();
         initCodeHighlight();
+        initCodeLanguageLabels();
         initCodeBlockCopy();
         initFormEnhancements();
         initDarkMode();
@@ -1136,34 +1426,5 @@
             // 页面重新可见时重新初始化某些功能
         }
     });
-
-    /**
-     * 阅读进度条
-     */
-    function initReadingProgress() {
-        // 检查是否启用了阅读进度功能
-        if (novaData && !novaData.enableReadingProgress) {
-            debugLog('阅读进度功能已禁用');
-            return;
-        }
-        
-        const article = document.querySelector('.entry-content');
-        if (!article) return;
-        
-        const progressBar = document.createElement('div');
-        progressBar.className = 'reading-progress';
-        document.body.appendChild(progressBar);
-        
-        window.addEventListener('scroll', function() {
-            const scrollTop = window.pageYOffset;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-            progressBar.style.width = scrollPercent + '%';
-        });
-    }
-
-    // 初始化阅读进度条
-    initReadingProgress();
-
 
 })();
